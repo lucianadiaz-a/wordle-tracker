@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wordle Competition Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: white;
+            color: black;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px 0;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .login-form, .dashboard {
+            background: #f9f9f9;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        textarea {
+            min-height: 120px;
+            font-family: monospace;
+            resize: vertical;
+        }
+
+        button {
+            background-color: black;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        button:hover:not(:disabled) {
+            opacity: 0.8;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .error {
+            color: #d32f2f;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .success {
+            color: #388e3c;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .score-display {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+        }
+
+        .player-score {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            flex: 1;
+            margin: 0 10px;
+        }
+
+        .player-score h3 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .score-number {
+            font-size: 3rem;
+            font-weight: bold;
+        }
+
+        .status-banner {
+            background: #f5f5f5;
+            border: 1px solid #e0e0e0;
+            padding: 15px;
+            border-radius: 4px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .status-banner.warning {
+            background: #fff3cd;
+            border-color: #ffeaa7;
+        }
+
+        .status-banner.success {
+            background: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .history-table th {
+            font-weight: 600;
+            background: #f5f5f5;
+        }
+
+        .logout-btn {
+            background: transparent;
+            color: black;
+            border: 1px solid black;
+            margin-top: 20px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .submission-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .win-streak {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 600px) {
+            .score-display {
+                flex-direction: column;
+            }
+            
+            .player-score {
+                margin: 10px 0;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Wordle Competition</h1>
+            <p>Daily head-to-head Wordle challenge</p>
+        </div>
+
+        <!-- Login Section -->
+        <div id="loginSection" class="login-form">
+            <h2>Login</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit">Login</button>
+                <div id="loginError" class="error"></div>
+            </form>
+            <p style="margin-top: 20px; font-size: 14px; color: #666;">
+                Demo users: player1/password1, player2/password2
+            </p>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboardSection" class="dashboard hidden">
+            <h2>Welcome, <span id="currentUser"></span>!</h2>
+            
+            <div class="score-display">
+                <div class="player-score">
+                    <h3>Player 1</h3>
+                    <div class="score-number" id="player1Score">0</div>
+                    <div class="win-streak" id="player1Streak"></div>
+                </div>
+                <div class="player-score">
+                    <h3>Player 2</h3>
+                    <div class="score-number" id="player2Score">0</div>
+                    <div class="win-streak" id="player2Streak"></div>
+                </div>
+            </div>
+
+            <div id="statusBanner" class="status-banner"></div>
+
+            <div class="submission-section">
+                <h3>Submit Today's Result</h3>
+                <form id="submitForm">
+                    <div class="form-group">
+                        <label for="wordleResult">Paste your Wordle result:</label>
+                        <textarea id="wordleResult" placeholder="Wordle 1,494 4/6
+
+⬛⬛⬛⬛⬛
+⬛⬛⬛🟨⬛
+🟩🟩🟨🟨⬛
+🟩🟩🟩🟩🟩" required></textarea>
+                    </div>
+                    <button type="submit" id="submitButton">Submit Result</button>
+                    <div id="submitMessage" class="message"></div>
+                </form>
+            </div>
+
+            <h3 style="margin-top: 40px;">Recent Games</h3>
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Player 1</th>
+                        <th>Player 2</th>
+                        <th>Winner</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody">
+                    <!-- History will be populated here -->
+                </tbody>
+            </table>
+
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <script>
+
+        let currentUser = null;
+
+        // Login functionality
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const res = await fetch("http://127.0.0.1:8000/api/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password }),
+                });
+
+                if (!res.ok) throw new Error("Login failed");
+
+                currentUser = username;
+                localStorage.setItem('currentUser', username);  // still used client-side
+                showDashboard();
+            } catch (err) {
+                document.getElementById('loginError').textContent = 'Invalid username or password';
+            }
+        });
+
+
+        // Submit Wordle result
+        
+    document.getElementById('submitForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const result = document.getElementById('wordleResult').value;
+        const parsed = parseWordleResult(result);
+
+        if (!parsed) {
+            showMessage('submitMessage', 'Invalid Wordle format. Please paste the complete result.', 'error');
+            return;
+        }
+
+        try {
+            const res = await fetch("http://localhost:8000/api/submit", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    username: currentUser,
+                    score: parsed.score,
+                    raw_result: result
+                })
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.detail || "Submission failed");
+            }
+
+            showMessage('submitMessage', 'Result submitted successfully!', 'success');
+            updateDashboard();
+            document.getElementById('submitButton').disabled = true;
+
+        } catch (err) {
+            showMessage('submitMessage', err.message, 'error');
+        }
+    });
+    
+
+        function parseWordleResult(text) {
+            const lines = text.trim().split('\n');
+            if (lines.length < 2) return null;
+            
+            const match = lines[0].match(/Wordle\s+[\d,]+\s+(\d+)\/6/);
+            if (!match) return null;
+            
+            return {
+                score: parseInt(match[1]),
+                fullText: text
+            };
+        }
+
+        
+
+        function showDashboard() {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('dashboardSection').classList.remove('hidden');
+            document.getElementById('currentUser').textContent = currentUser;
+            updateDashboard();
+        }
+
+        async function updateDashboard() {
+            const scores = await fetch("/api/scores").then(res => res.json());
+            // Backend now manages game state; skipping local storage fetch
+            const today = new Date().toISOString().split('T')[0];
+            
+            // Update scores
+            document.getElementById('player1Score').textContent = scores.player1.wins;
+            document.getElementById('player2Score').textContent = scores.player2.wins;
+            
+            // Update streaks
+            document.getElementById('player1Streak').textContent = 
+                scores.player1.streak > 0 ? `${scores.player1.streak} game streak` : '';
+            document.getElementById('player2Streak').textContent = 
+                scores.player2.streak > 0 ? `${scores.player2.streak} game streak` : '';
+            
+            // Update status banner
+            const statusBanner = document.getElementById('statusBanner');
+            const todayGame = games[today];
+            
+            if (!todayGame || !todayGame[currentUser]) {
+                statusBanner.className = 'status-banner warning';
+                statusBanner.textContent = "Don't forget to submit today's Wordle result!";
+                document.getElementById('submitButton').disabled = false;
+            } else if (todayGame.player1 && todayGame.player2) {
+                statusBanner.className = 'status-banner success';
+                if (todayGame.winner === 'tie') {
+                    statusBanner.textContent = `Today's result: It's a tie! Both players scored ${todayGame.player1.score}/6`;
+                } else {
+                    const winner = todayGame.winner.charAt(0).toUpperCase() + todayGame.winner.slice(1);
+                    statusBanner.textContent = `Today's winner: ${winner}! (${todayGame[todayGame.winner].score}/6 vs ${todayGame[todayGame.winner === 'player1' ? 'player2' : 'player1'].score}/6)`;
+                }
+                document.getElementById('submitButton').disabled = true;
+            } else {
+                statusBanner.className = 'status-banner';
+                statusBanner.textContent = 'Waiting for both players to submit their results...';
+                document.getElementById('submitButton').disabled = true;
+            }
+            
+            // Update history table
+            updateHistoryTable();
+        }
+
+        async function updateHistoryTable() {
+            const games = await fetch("http://localhost:8000/api/history").then(res => res.json());
+            const tbody = document.getElementById('historyTableBody');
+            tbody.innerHTML = '';
+
+            if (games.length === 0) {
+                const row = tbody.insertRow();
+                const cell = row.insertCell(0);
+                cell.colSpan = 4;
+                cell.style.textAlign = 'center';
+                cell.style.color = '#666';
+                cell.textContent = 'No completed games yet';
+                return;
+            }
+
+            games.forEach(game => {
+                const row = tbody.insertRow();
+                row.insertCell(0).textContent = new Date(game.date).toLocaleDateString();
+                row.insertCell(1).textContent = game.player1;
+                row.insertCell(2).textContent = game.player2;
+
+                const winnerCell = row.insertCell(3);
+                if (game.winner === 'tie') {
+                    winnerCell.textContent = 'Tie';
+                } else {
+                    winnerCell.textContent = game.winner.charAt(0).toUpperCase() + game.winner.slice(1);
+                    winnerCell.style.fontWeight = 'bold';
+                }
+            });
+        }
+
+
+        function showMessage(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = type;
+            setTimeout(() => {
+                element.textContent = '';
+                element.className = '';
+            }, 3000);
+        }
+
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('dashboardSection').classList.add('hidden');
+            document.getElementById('loginForm').reset();
+            document.getElementById('submitForm').reset();
+        }
+
+        // Check if user is already logged in
+        const savedUser = localStorage.getItem('currentUser');
+        if (savedUser) {
+            currentUser = savedUser;
+            showDashboard();
+        }
+    </script>
+</body>
+</html>
