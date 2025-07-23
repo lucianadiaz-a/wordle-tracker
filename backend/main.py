@@ -12,7 +12,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Or restrict to your Netlify URL
+    allow_origins=["https://thriving-melomakarona-9c203c.netlify.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
